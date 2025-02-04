@@ -6,16 +6,11 @@ from .serializers import FileUploadSerializer
 from .spectacular_schemas import file_upload_schema
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import FileModel
-
-
 from django.shortcuts import get_object_or_404
-from django.http import FileResponse, HttpResponse
+from django.http import FileResponse
 from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.parsers import MultiPartParser, FormParser
-from .models import FileModel
 import os
-from django.conf import settings
+from django.utils.timezone import now
 
 
 class UploadViewSet(ViewSet):
@@ -53,6 +48,14 @@ class FileDownloadView(APIView):
             if file_extension in ['.png', '.jpg', '.jpeg', '.gif', '.mp4', '.mp3']:
                 # Generate a URL for viewing the file
                 file_url = request.build_absolute_uri(file_instance.file.url)
+
+                # Update last_retrieved_at and retrieval_count
+                file_instance.last_retrieved_at = now()
+                file_instance.retrieval_count += 1
+                file_instance.save(update_fields=['last_retrieved_at', 'retrieval_count'])
+
+
+
                 return Response({
                     "message": "File is available for viewing",
                     "file_url": file_url

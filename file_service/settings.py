@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
      'drf_spectacular',
+    'rest_framework_api_key',
     'rest_framework',
     'files',
 ]
@@ -76,6 +77,11 @@ TEMPLATES = [
 
 
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework_api_key.permissions.HasAPIKey',
+    ],
     # YOUR SETTINGS
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
@@ -85,7 +91,11 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'file service',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
-    # OTHER SETTINGS
+
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {"ApiKeyAuth": {"type": "apiKey", "in": "header", "name": "Authorization"}}
+    },
+    "SECURITY": [{"ApiKeyAuth": [],}],
 }
 
 WSGI_APPLICATION = 'file_service.wsgi.application'

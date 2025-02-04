@@ -1,6 +1,6 @@
-import os
 from django.db import models
-import uuid
+import uuid, os
+from django.utils.timezone import now
 
 def file_upload_to(instance, filename):
     base_folder = 'uploads/'
@@ -25,7 +25,7 @@ class FileModel(models.Model):
     file_size = models.PositiveBigIntegerField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     last_retrieved_at = models.DateTimeField(null=True, blank=True)
-    alt_text = models.TextField(blank=True)
+    alt_text = models.TextField()
     retrieval_count = models.PositiveIntegerField(default=0)
     file_extension = models.CharField(max_length=10, blank=True)
 
@@ -33,7 +33,16 @@ class FileModel(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
+        print('save')
         if not self.stored_as:
             self.stored_as = uuid.uuid4().hex
             self.file_extension = os.path.splitext(self.file.name)[1]
         super().save(*args, **kwargs)
+
+    def update_retrieval_info(self):
+        """
+        Updates the last_retrieved_at and retrieval_count fields.
+        """
+        self.last_retrieved_at = now()
+        self.retrieval_count += 1
+        self.save(update_fields=['last_retrieved_at', 'retrieval_count'])

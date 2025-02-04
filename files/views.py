@@ -2,15 +2,14 @@
 from django.shortcuts import render
 from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
-from .serializers import FileUploadSerializer
-from .spectacular_schemas import file_upload_schema
+from .serializers import FileUploadSerializer, FileDownloadSerializer
+from .spectacular_schemas import file_upload_schema, file_download_schema
 from rest_framework.parsers import MultiPartParser, FormParser
 from .models import FileModel
 from django.shortcuts import get_object_or_404
 from django.http import FileResponse
 from rest_framework.views import APIView
 import os
-from django.utils.timezone import now
 
 
 class UploadViewSet(ViewSet):
@@ -38,9 +37,12 @@ class UploadViewSet(ViewSet):
 class FileDownloadView(APIView):
     parser_classes = [MultiPartParser, FormParser]
 
+
+    @file_download_schema
     def get(self, request, stored_as):
         file_instance = get_object_or_404(FileModel, stored_as=stored_as)
         file_path = file_instance.file.path
+        alt_text = file_instance.alt_text
 
         if os.path.exists(file_path):
             # Determine if the file is an image or media file
@@ -49,28 +51,31 @@ class FileDownloadView(APIView):
                 # Generate a URL for viewing the file
                 file_url = request.build_absolute_uri(file_instance.file.url)
 
-                # Update last_retrieved_at and retrieval_count
-                file_instance.last_retrieved_at = now()
-                file_instance.retrieval_count += 1
-                file_instance.save(update_fields=['last_retrieved_at', 'retrieval_count'])
+                # Update retrieval info
+                file_instance.update_retrieval_info()
 
-
-
-                return Response({
+                # Serialize the response
+                response_data = {
                     "message": "File is available for viewing",
-                    "file_url": file_url
-                })
+                    "file_url": file_url,
+                    "alt_text": alt_text
+                }
+                serializer = FileDownloadSerializer(data=response_data)
+                serializer.is_valid(raise_exception=True)
+                return Response(serializer.data)
             else:
                 # Provide a download link for non-media files
                 response = FileResponse(open(file_path, 'rb'))
                 response['Content-Disposition'] = f'attachment; filename="{file_instance.name}"'
                 return response
         else:
-            return Response({
+            # Serialize the error response
+            error_data = {
                 "message": "File not found",
                 "error": "The requested file does not exist on the server."
-            }, status=404)
-
-
+            }
+            serializer = FileDownloadSerializer(data=error_data)
+            serializer.is_valid(raise_exception=True)
+            return Response(serializer.data, status=404)
 def home(request):
     return render(request, 'home.html')

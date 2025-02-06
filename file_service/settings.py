@@ -96,6 +96,7 @@ SPECTACULAR_SETTINGS = {
         "securitySchemes": {"ApiKeyAuth": {"type": "apiKey", "in": "header", "name": "Authorization"}}
     },
     "SECURITY": [{"ApiKeyAuth": [],}],
+    'COMPONENT_SPLIT_REQUEST': True,
 }
 
 WSGI_APPLICATION = 'file_service.wsgi.application'

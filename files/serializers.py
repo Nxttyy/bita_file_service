@@ -7,7 +7,7 @@ from rest_framework import serializers
 
 # Serializers define the API representation.
 class FileUploadSerializer(ModelSerializer):
-    # file = FileField()
+    file = FileField()
 
     class Meta:
         model = FileModel

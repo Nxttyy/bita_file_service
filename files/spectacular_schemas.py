@@ -26,7 +26,9 @@ from .serializers import FileUploadSerializer
 file_upload_schema = extend_schema(
         summary="Upload a file",
         description="Upload a file to the server. Images are optimized automatically.",
-        request=FileUploadSerializer,
+        request={
+            "multipart/form-data": FileUploadSerializer
+        },
         responses={
             201: OpenApiResponse(
                 description="File uploaded successfully",

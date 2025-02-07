@@ -1,9 +1,8 @@
 from django.db import models
 import uuid, os
 from django.utils.timezone import now
-
+from storages.backends.s3boto3 import S3Boto3Storage
 def file_upload_to(instance, filename):
-    base_folder = 'uploads/'
     file_extension = filename.split('.')[-1].lower()
     file_folder = {
         'png': 'images/',
@@ -14,13 +13,15 @@ def file_upload_to(instance, filename):
         'mp4': 'video/',
         'pdf': 'documents/',
     }.get(file_extension, 'others/')
-    return os.path.join(base_folder + file_folder, f"{instance.stored_as}.{file_extension}")
+    
+    return os.path.join(file_folder, f"{instance.stored_as}.{file_extension}")
+
 
 class FileModel(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     stored_as = models.CharField(max_length=255, unique=True, blank=True, null=True)
-    file = models.FileField(upload_to=file_upload_to)
+    file = models.FileField(upload_to=file_upload_to, storage=S3Boto3Storage() )
     file_type = models.CharField(max_length=50, blank=True)
     file_size = models.PositiveBigIntegerField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -40,9 +41,6 @@ class FileModel(models.Model):
         super().save(*args, **kwargs)
 
     def update_retrieval_info(self):
-        """
-        Updates the last_retrieved_at and retrieval_count fields.
-        """
         self.last_retrieved_at = now()
         self.retrieval_count += 1
         self.save(update_fields=['last_retrieved_at', 'retrieval_count'])

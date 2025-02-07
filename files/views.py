@@ -40,42 +40,11 @@ class FileDownloadView(APIView):
 
     @file_download_schema
     def get(self, request, stored_as):
+
         file_instance = get_object_or_404(FileModel, stored_as=stored_as)
-        file_path = file_instance.file.path
-        alt_text = file_instance.alt_text
+        
+        response_data = FileDownloadSerializer(file_instance).data
+        return Response(response_data)
 
-        if os.path.exists(file_path):
-            # Determine if the file is an image or media file
-            file_extension = os.path.splitext(file_path)[1].lower()
-            if file_extension in ['.png', '.jpg', '.jpeg', '.gif', '.mp4', '.mp3']:
-                # Generate a URL for viewing the file
-                file_url = request.build_absolute_uri(file_instance.file.url)
-
-                # Update retrieval info
-                file_instance.update_retrieval_info()
-
-                # Serialize the response
-                response_data = {
-                    "message": "File is available for viewing",
-                    "file_url": file_url,
-                    "alt_text": alt_text
-                }
-                serializer = FileDownloadSerializer(data=response_data)
-                serializer.is_valid(raise_exception=True)
-                return Response(serializer.data)
-            else:
-                # Provide a download link for non-media files
-                response = FileResponse(open(file_path, 'rb'))
-                response['Content-Disposition'] = f'attachment; filename="{file_instance.name}"'
-                return response
-        else:
-            # Serialize the error response
-            error_data = {
-                "message": "File not found",
-                "error": "The requested file does not exist on the server."
-            }
-            serializer = FileDownloadSerializer(data=error_data)
-            serializer.is_valid(raise_exception=True)
-            return Response(serializer.data, status=404)
 def home(request):
     return render(request, 'home.html')

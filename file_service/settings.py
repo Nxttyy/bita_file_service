@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework_api_key',
     'rest_framework',
     'files',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -144,15 +145,27 @@ USE_I18N = True
 USE_TZ = True
 
 
+# AWS Credentials (You can also set these as environment variables)
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
+AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='us-east-1')
+
+# S3 Storage Configuration
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',  # Optional cache settings
+}
+
+# Use S3 for storing media files
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
 
-
-MEDIA_URL = '/media/'  # URL prefix for media files
-# MEDIA_ROOT = os.path.join(BASE_DIR, 'uploads')
-MEDIA_ROOT = BASE_DIR
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

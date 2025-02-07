@@ -50,39 +50,42 @@ class FileUploadSerializer(ModelSerializer):
 
 
     def create(self, validated_data):
-
         file = validated_data.pop('file')
-        
+
+        # Store original file reference before modifying it
+        uploaded_file = file  
+
         # Optimize the image if it's an image file
         if file.content_type.startswith('image'):
             optimized_image = self.optimize_image(file)
             validated_data['file'] = optimized_image
+            uploaded_file = optimized_image  # Update to the optimized image
+        else:
+            validated_data['file'] = uploaded_file
 
-
-
-        uploaded_file = validated_data.get('file')  # Extract the file
-
-
-        # these assignments (atleast the 'file type') should be done after image optimization since the file type changes from ant->jpg during optimization
+        # Extract file attributes
         file_name = uploaded_file.name
         file_size = uploaded_file.size
         file_type = uploaded_file.content_type
 
-        # Add these values to the validated data
+        # Add attributes to validated data
         validated_data['name'] = file_name
         validated_data['file_size'] = file_size
         validated_data['file_type'] = file_type.lower()
 
-
-
-        # Create the FileModel instance using the validated data
+        # Create the FileModel instance
         file_instance = FileModel.objects.create(**validated_data)
-
+        
         return file_instance
 
-
 class FileDownloadSerializer(serializers.Serializer):
-    message = serializers.CharField()
-    file_url = serializers.URLField(required=False)
+    message = serializers.CharField(default="File retrieved successfully")
+    file_url = serializers.SerializerMethodField()
     alt_text = serializers.CharField(required=False)
     error = serializers.CharField(required=False)
+
+    def get_file_url(self, obj):
+        # Ensure obj is a model instance before accessing its attributes
+        if hasattr(obj, "file") and obj.file:
+            return obj.file.url  # Correct way to get file URL
+        return None

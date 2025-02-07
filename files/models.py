@@ -34,7 +34,7 @@ class FileModel(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        print('save')
+
         if not self.stored_as:
             self.stored_as = uuid.uuid4().hex
             self.file_extension = os.path.splitext(self.file.name)[1]

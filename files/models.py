@@ -60,11 +60,13 @@ class FileModel(models.Model):
     def save(self, *args, **kwargs):
         if not self.stored_as:
             self.stored_as = uuid.uuid4().hex  # Generate a unique ID
+            # self.file_extension = os.path.splitext(self.file.name)[1].lower()  # Extract file extension
             self.file_extension = os.path.splitext(self.file.name)[1].lower()  # Extract file extension
-
         # Set file size before saving
         if self.file:
-            self.file_size = self.file.size
+            original_filename = f"{self.stored_as}{self.file_extension}"
+            self.file.name = original_filename  # Set the new filename
+            self.file_size = self.file.size  # Set file size
 
         super().save(*args, **kwargs)  # Save the original file first!
 

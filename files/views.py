@@ -12,11 +12,32 @@ from rest_framework.views import APIView
 import os
 
 
+# class UploadViewSet(ViewSet):
+#     serializer_class = FileUploadSerializer
+#     parser_classes = [MultiPartParser, FormParser]
+
+#     @file_upload_schema
+#     def create(self, request):
+#         my_file = FileUploadSerializer(data=request.data)
+#         if my_file.is_valid():
+#             saved_file = my_file.save()
+#             response = {
+#                 "message": "File uploaded successfully",
+#                 "stored_as": saved_file.stored_as
+#             }
+#         else:
+#             response = {
+#                 "message": "Invalid request",
+#                 "errors": my_file.errors
+#             }
+
+#         return Response(response)
+
+
 class UploadViewSet(ViewSet):
     serializer_class = FileUploadSerializer
     parser_classes = [MultiPartParser, FormParser]
 
-    @file_upload_schema
     def create(self, request):
         my_file = FileUploadSerializer(data=request.data)
         if my_file.is_valid():
@@ -34,9 +55,9 @@ class UploadViewSet(ViewSet):
         return Response(response)
 
 
+
 class FileDownloadView(APIView):
     parser_classes = [MultiPartParser, FormParser]
-
 
     @file_download_schema
     def get(self, request, stored_as):
